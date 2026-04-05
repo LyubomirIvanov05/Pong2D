@@ -2,9 +2,11 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <SDL_ttf.h>
 
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
+
 
 struct Ball {
   float x;
@@ -35,17 +37,39 @@ struct Computer {
 };
 
 
-void BallCollision(struct Ball *ball) {
+void BallReset(struct Ball *ball) {
+  ball->ballMoveDown = false;
+  ball->ballMoveUp = false;
+  ball->ballMoveLeft = false;
+  ball->ballMoveRight = false;
+  ball->x = WINDOW_WIDTH / 2;
+  ball->y = WINDOW_HEIGHT / 2;
+  int randomY = (rand() % 2) + 1;
+  int randomX = (rand() % 2) + 1;
+  if (randomX == 1) {
+    ball->ballMoveLeft = true;
+  } else {
+    ball->ballMoveRight = true;
+  }
+
+  if (randomY == 1) {
+    ball->ballMoveUp = true;
+  } else {
+    ball->ballMoveDown = true;
+  }
+}
+
+void BallCollision(struct Ball *ball, int *computer_score, int *player_score) {
   // CHECK FOR COLLISION BETWEEN BALL AND WIDNOW
   if (ball -> x <= 0) {
-    ball -> x = 0;
-    ball -> ballMoveLeft = false;
-    ball -> ballMoveRight = true;
+    (*computer_score)++;
+    printf("computer score: %d\n", *computer_score);
+    BallReset(ball);
   }
   if (ball -> x > WINDOW_WIDTH - ball -> radius * 2) {
-    ball -> x = WINDOW_WIDTH - ball -> radius * 2;
-    ball -> ballMoveRight = false;
-    ball -> ballMoveLeft = true;
+    (*player_score)++;
+    printf("player score: %d\n", *player_score);
+    BallReset(ball);
   }
   if (ball -> y <= 0) {
     ball -> y = 0;
@@ -142,6 +166,9 @@ int main(void) {
     return 1;
   }
 
+  TTF_Init();
+  TTF_Font *font = TTF_OpenFont("Monaco.ttf", 32);     
+
   // Create a window
   SDL_Window *window =
   SDL_CreateWindow("Pong", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
@@ -166,6 +193,8 @@ int main(void) {
   int running = 1;
   float velocity = 0.3;
   float computer_velocity = 0.1;
+  int computer_score = 0;
+  int player_score = 0;
   SDL_Event event;
   Uint32 last_time = SDL_GetTicks();
 
@@ -194,20 +223,8 @@ int main(void) {
   computer.MoveUp = false;
   computer.MoveDown = false;
 
+  BallReset(&ball);
 
-  int randomY = (rand() % 2) + 1;
-  int randomX = (rand() % 2) + 1;
-  if (randomX == 1) {
-    ball.ballMoveLeft = true;
-  } else {
-    ball.ballMoveRight = true;
-  }
-
-  if (randomY == 1) {
-    ball.ballMoveUp = true;
-  } else {
-    ball.ballMoveDown = true;
-  }
 
   while (running) {
     // 1. Handle input
@@ -236,15 +253,19 @@ int main(void) {
         player.MoveUp = false;
       }
     }
+    char player_score_text[16];                                              
+    sprintf(player_score_text, "%d", player_score); 
+    
+    char computer_score_text[16];                                              
+    sprintf(computer_score_text, "%d", computer_score);
 
     // 2. Update game state
     // TODO: move paddles, move ball, check collisions
 
-   
     PlayerMovement(&player, velocity, delta_time);
     PlayerCollision(&player);
     BallMovement(&ball, velocity, delta_time);
-    BallCollision(&ball);
+    BallCollision(&ball, &computer_score, &player_score);
     PlayerAndBallCollision(&player, &ball);
     ComputerMovement(&computer, computer_velocity, delta_time, &ball);
     ComputerCollision(&computer);
@@ -283,12 +304,31 @@ int main(void) {
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 0);
     SDL_RenderFillRect(renderer, &computer_rect);
 
+    // SCORE
+    SDL_Color white = {255, 255, 255, 255};
+
+    SDL_Surface *p_surface = TTF_RenderText_Solid(font, player_score_text, white);
+    SDL_Texture *p_texture = SDL_CreateTextureFromSurface(renderer, p_surface);
+    SDL_Rect p_score_rect = {WINDOW_WIDTH / 4, 20, p_surface->w, p_surface->h};
+    SDL_RenderCopy(renderer, p_texture, NULL, &p_score_rect);
+    SDL_FreeSurface(p_surface);
+    SDL_DestroyTexture(p_texture);
+
+    SDL_Surface *c_surface = TTF_RenderText_Solid(font, computer_score_text, white);
+    SDL_Texture *c_texture = SDL_CreateTextureFromSurface(renderer, c_surface);
+    SDL_Rect c_score_rect = {3 * WINDOW_WIDTH / 4, 20, c_surface->w, c_surface->h};
+    SDL_RenderCopy(renderer, c_texture, NULL, &c_score_rect);
+    SDL_FreeSurface(c_surface);
+    SDL_DestroyTexture(c_texture);
+
     SDL_RenderPresent(renderer); // show what we drew
   }
 
   // Clean up
   SDL_DestroyRenderer(renderer);
   SDL_DestroyWindow(window);
+  TTF_CloseFont(font);
+  TTF_Quit();
   SDL_Quit();
 
   return 0;
