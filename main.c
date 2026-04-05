@@ -95,6 +95,16 @@ void PlayerCollision(struct Player *player) {
   }
 }
 
+void ComputerMovement(struct Computer *computer, float computer_velocity, Uint32 delta_time, struct Ball *ball) {
+  if(ball -> y - ball -> radius > computer -> y - computer -> h / 2) {
+    computer -> y += computer_velocity * delta_time;
+  }
+
+  if(ball -> y - ball -> radius < computer -> y - computer -> h / 2) {
+    computer -> y -= computer_velocity * delta_time;
+  }
+}
+
 void PlayerAndBallCollision(struct Player *player, struct Ball *ball) {
     // BALL AND RECTANGLE COLLISIONS
     if (ball -> x <= player -> x + ball -> radius * 2 && ball -> y >= player -> y && ball -> y <= player -> y + player -> h) {
@@ -136,6 +146,7 @@ int main(void) {
   // Game loop
   int running = 1;
   float velocity = 0.3;
+  float computer_velocity = 0.1;
   SDL_Event event;
   Uint32 last_time = SDL_GetTicks();
 
@@ -216,7 +227,7 @@ int main(void) {
     BallMovement(&ball, velocity, delta_time);
     BallCollision(&ball);
     PlayerAndBallCollision(&player, &ball);
-   
+    ComputerMovement(&computer, computer_velocity, delta_time, &ball);
 
   
     // 3. Render
