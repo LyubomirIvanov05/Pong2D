@@ -6,10 +6,105 @@
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
 
-// struct Paddle {
-//   int width;
-//   int height;
-// }
+struct Ball {
+  float x;
+  float y;
+  bool ballMoveLeft;
+  bool ballMoveRight;
+  bool ballMoveUp;
+  bool ballMoveDown;
+  int radius;
+};
+
+struct Player {
+  float x;
+  float y;
+  int w;
+  int h;
+  bool MoveUp;
+  bool MoveDown;
+};
+
+struct Computer {
+  float x;
+  float y;
+  int w;
+  int h;
+  bool MoveUp;
+  bool MoveDown;
+};
+
+
+void BallCollision(struct Ball *ball) {
+  // CHECK FOR COLLISION BETWEEN BALL AND WIDNOW
+  if (ball -> x <= 0) {
+    ball -> x = 0;
+    ball -> ballMoveLeft = false;
+    ball -> ballMoveRight = true;
+  }
+  if (ball -> x > WINDOW_WIDTH - ball -> radius * 2) {
+    ball -> x = WINDOW_WIDTH - ball -> radius * 2;
+    ball -> ballMoveRight = false;
+    ball -> ballMoveLeft = true;
+  }
+  if (ball -> y <= 0) {
+    ball -> y = 0;
+    ball -> ballMoveUp = false;
+    ball -> ballMoveDown = true;
+  }
+  if (ball -> y > WINDOW_HEIGHT - ball -> radius * 2) {
+    ball -> y = WINDOW_HEIGHT - ball -> radius * 2;
+    ball -> ballMoveDown = false;
+    ball -> ballMoveUp = true;
+  }
+}
+
+void BallMovement(struct Ball *ball, float velocity, Uint32 delta_time) {
+
+    // MOVE BALL
+    if (ball -> ballMoveUp) {
+      ball -> y -= velocity * delta_time;
+    }
+    if (ball -> ballMoveDown) {
+      ball -> y += velocity * delta_time;
+    }
+    if (ball -> ballMoveLeft) {
+      ball -> x -= velocity * delta_time;
+    }
+    if (ball -> ballMoveRight) {
+      ball -> x += velocity * delta_time;
+    }
+}
+
+void PlayerMovement(struct Player *player, float velocity, Uint32 delta_time) {
+   // MOVE PLAYER
+   if (player -> MoveUp) {
+      player -> y -= velocity * delta_time;
+    }
+    if (player -> MoveDown) {
+      player -> y += velocity * delta_time;
+    }
+}
+
+void PlayerCollision(struct Player *player) {
+  if (player -> y <= 0) {
+    player -> y = 0;
+  }
+  if (player -> y + player -> h > WINDOW_HEIGHT){
+    player -> y = WINDOW_HEIGHT - 200;
+  }
+}
+
+void PlayerAndBallCollision(struct Player *player, struct Ball *ball) {
+    // BALL AND RECTANGLE COLLISIONS
+    if (ball -> x <= player -> x + ball -> radius * 2 && ball -> y >= player -> y && ball -> y <= player -> y + player -> h) {
+      ball -> x = player -> x + 20;
+      ball -> ballMoveLeft = false;
+      ball -> ballMoveRight = true;
+    }
+
+}
+
 
 int main(void) {
   // Initialize SDL's video subsystem
@@ -20,8 +115,8 @@ int main(void) {
 
   // Create a window
   SDL_Window *window =
-      SDL_CreateWindow("Pong", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                       WINDOW_WIDTH, WINDOW_HEIGHT, 0);
+  SDL_CreateWindow("Pong", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                   WINDOW_WIDTH, WINDOW_HEIGHT, 0);
   if (!window) {
     fprintf(stderr, "SDL_CreateWindow Error: %s\n", SDL_GetError());
     SDL_Quit();
@@ -40,34 +135,48 @@ int main(void) {
 
   // Game loop
   int running = 1;
-  SDL_Event event;
   float velocity = 0.3;
-  float rect_y = 50;
-  float rect_x = 50;
-  bool moveUp = false;
-  bool moveDown = false;
+  SDL_Event event;
   Uint32 last_time = SDL_GetTicks();
 
-  float ball_x = WINDOW_WIDTH / 2;
-  float ball_y = WINDOW_HEIGHT / 2;
-  bool ballMoveUp = false;
-  bool ballMoveLeft = false;
-  bool ballMoveRight = false;
-  bool ballMoveDown = false;
-  int radius = 10;
+  struct Ball ball;
+  ball.x = WINDOW_WIDTH / 2;
+  ball.y = WINDOW_HEIGHT / 2;
+  ball.ballMoveDown = false;
+  ball.ballMoveUp = false;
+  ball.ballMoveLeft = false;
+  ball.ballMoveRight = false;
+  ball.radius = 10;
+
+  struct Player player;
+  player.x = 50;
+  player.y = 50;
+  player.w = 20;
+  player.h = 200;
+  player.MoveUp = false;
+  player.MoveDown = false;
+
+  struct Computer computer;
+  computer.x = WINDOW_WIDTH - 50;
+  computer.y = 50;
+  computer.w = 20;
+  computer.h = 200;
+  computer.MoveUp = false;
+  computer.MoveDown = false;
+
 
   int randomY = (rand() % 2) + 1;
   int randomX = (rand() % 2) + 1;
   if (randomX == 1) {
-    ballMoveLeft = true;
+    ball.ballMoveLeft = true;
   } else {
-    ballMoveRight = true;
+    ball.ballMoveRight = true;
   }
 
   if (randomY == 1) {
-    ballMoveUp = true;
+    ball.ballMoveUp = true;
   } else {
-    ballMoveDown = true;
+    ball.ballMoveDown = true;
   }
 
   while (running) {
@@ -84,73 +193,32 @@ int main(void) {
       }
       if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_s) {
         // GO DOWN
-        moveDown = true;
+        player.MoveDown = true;
       }
       if (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_s) {
-        moveDown = false;
+        player.MoveDown = false;
       }
       if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_w) {
         // GO UP
-        moveUp = true;
+        player.MoveUp = true;
       }
       if (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_w) {
-        moveUp = false;
+        player.MoveUp = false;
       }
     }
 
     // 2. Update game state
     // TODO: move paddles, move ball, check collisions
 
-    // MOVE PLAYER
-    if (moveUp) {
-      rect_y -= velocity * delta_time;
-    }
-    if (moveDown) {
-      rect_y += velocity * delta_time;
-    }
+   
+    PlayerMovement(&player, velocity, delta_time);
+    PlayerCollision(&player);
+    BallMovement(&ball, velocity, delta_time);
+    BallCollision(&ball);
+    PlayerAndBallCollision(&player, &ball);
+   
 
-    // MOVE BALL
-    if (ballMoveUp) {
-      ball_y -= velocity * delta_time;
-    }
-    if (ballMoveDown) {
-      ball_y += velocity * delta_time;
-    }
-    if (ballMoveLeft) {
-      ball_x -= velocity * delta_time;
-    }
-    if (ballMoveRight) {
-      ball_x += velocity * delta_time;
-    }
-
-    // CHECK FOR COLLISION BETWEEN BALL AND WIDNOW
-    if (ball_x - radius <= 0) {
-      printf("COLLISION ON 1\n");
-      ballMoveLeft = false;
-      ballMoveRight = true;
-    }
-    if (ball_x + radius >= WINDOW_WIDTH - radius) {
-      printf("COLLISION ON 2\n");
-      printf("ball_x = %f \n", ball_x);
-      ballMoveRight = false;
-      ballMoveLeft = true;
-    }
-    if (ball_y - radius <= 0) {
-      ballMoveUp = false;
-      ballMoveDown = true;
-      printf("COLLISION ON 3\n");
-    }
-    if (ball_y + radius >= WINDOW_HEIGHT - radius) {
-      printf("COLLISION ON 4\n");
-      printf("ball_y = %f \n", ball_y);
-      ballMoveDown = false;
-      ballMoveUp = true;
-    }
-
-    if (ball_x - radius == rect_x && ball_y - radius == rect_y) {
-      printf("COLLISION DETECTED X \n");
-    }
-
+  
     // 3. Render
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // black background
     SDL_RenderClear(renderer);
@@ -158,22 +226,31 @@ int main(void) {
     // TODO: draw paddles and ball here using SDL_RenderFillRect()
     // PLAYER
     SDL_Rect rect;
-    rect.x = rect_x;
-    rect.y = rect_y;
-    rect.w = 20;
-    rect.h = 200;
+    rect.x = player.x;
+    rect.y = player.y;
+    rect.w = player.w;
+    rect.h = player.h;
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_RenderFillRect(renderer, &rect);
 
     // BALL
-    SDL_Rect ball;
-    ball.x = ball_x;
-    ball.y = ball_y;
-    ball.w = radius * 2;
-    ball.h = radius * 2;
+    SDL_Rect ball_rect;
+    ball_rect.x = ball.x;
+    ball_rect.y = ball.y;
+    ball_rect.w = ball.radius * 2;
+    ball_rect.h = ball.radius * 2;
 
     SDL_SetRenderDrawColor(renderer, 125, 200, 16, 75);
-    SDL_RenderFillRect(renderer, &ball);
+    SDL_RenderFillRect(renderer, &ball_rect);
+
+    //COMPUTER
+    SDL_Rect computer_rect;
+    computer_rect.x = computer.x;
+    computer_rect.y = computer.y;
+    computer_rect.w = computer.w;
+    computer_rect.h = computer.h;
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 0);
+    SDL_RenderFillRect(renderer, &computer_rect);
 
     SDL_RenderPresent(renderer); // show what we drew
   }
