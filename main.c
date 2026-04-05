@@ -91,17 +91,26 @@ void PlayerCollision(struct Player *player) {
     player -> y = 0;
   }
   if (player -> y + player -> h > WINDOW_HEIGHT){
-    player -> y = WINDOW_HEIGHT - 200;
+    player -> y = WINDOW_HEIGHT - player -> h;
   }
 }
 
 void ComputerMovement(struct Computer *computer, float computer_velocity, Uint32 delta_time, struct Ball *ball) {
-  if(ball -> y - ball -> radius > computer -> y - computer -> h / 2) {
+  if(ball -> y + ball -> radius > computer -> y + computer -> h / 2) {
     computer -> y += computer_velocity * delta_time;
   }
 
-  if(ball -> y - ball -> radius < computer -> y - computer -> h / 2) {
+  if(ball -> y + ball -> radius < computer -> y + computer -> h / 2) {
     computer -> y -= computer_velocity * delta_time;
+  }
+}
+
+void ComputerCollision(struct Computer *computer) {
+  if(computer -> y <= 0) {
+    computer -> y = 0;
+  }
+  if(computer -> y + computer -> h > WINDOW_HEIGHT) {
+    computer -> y = WINDOW_HEIGHT - computer -> h;
   }
 }
 
@@ -146,7 +155,7 @@ int main(void) {
   // Game loop
   int running = 1;
   float velocity = 0.3;
-  float computer_velocity = 0.1;
+  float computer_velocity = 0.3;
   SDL_Event event;
   Uint32 last_time = SDL_GetTicks();
 
@@ -228,7 +237,7 @@ int main(void) {
     BallCollision(&ball);
     PlayerAndBallCollision(&player, &ball);
     ComputerMovement(&computer, computer_velocity, delta_time, &ball);
-
+    ComputerCollision(&computer);
   
     // 3. Render
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // black background
