@@ -114,6 +114,14 @@ void ComputerCollision(struct Computer *computer) {
   }
 }
 
+void ComputerAndBallCollision(struct Computer *computer, struct Ball *ball) {
+  if(ball->x + ball->radius * 2 >= computer -> x && ball -> y >= computer -> y && ball->y <= computer->y + computer->h) {
+    ball->x = computer->x - ball->radius * 2;
+    ball->ballMoveRight = false;
+    ball->ballMoveLeft = true;
+  }
+}
+
 void PlayerAndBallCollision(struct Player *player, struct Ball *ball) {
     // BALL AND RECTANGLE COLLISIONS
     if (ball -> x <= player -> x + ball -> radius * 2 && ball -> y >= player -> y && ball -> y <= player -> y + player -> h) {
@@ -238,6 +246,7 @@ int main(void) {
     PlayerAndBallCollision(&player, &ball);
     ComputerMovement(&computer, computer_velocity, delta_time, &ball);
     ComputerCollision(&computer);
+    ComputerAndBallCollision(&computer, &ball);
   
     // 3. Render
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // black background
