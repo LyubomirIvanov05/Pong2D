@@ -1,12 +1,11 @@
 #include <SDL.h>
+#include <SDL_ttf.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <SDL_ttf.h>
 
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
-
 
 struct Ball {
   float x;
@@ -36,7 +35,6 @@ struct Computer {
   bool MoveDown;
 };
 
-
 void BallReset(struct Ball *ball) {
   ball->ballMoveDown = false;
   ball->ballMoveUp = false;
@@ -61,87 +59,89 @@ void BallReset(struct Ball *ball) {
 
 void BallCollision(struct Ball *ball, int *computer_score, int *player_score) {
   // CHECK FOR COLLISION BETWEEN BALL AND WIDNOW
-  if (ball -> x <= 0) {
+  if (ball->x <= 0) {
     (*computer_score)++;
     printf("computer score: %d\n", *computer_score);
     BallReset(ball);
   }
-  if (ball -> x > WINDOW_WIDTH - ball -> radius * 2) {
+  if (ball->x > WINDOW_WIDTH - ball->radius * 2) {
     (*player_score)++;
     printf("player score: %d\n", *player_score);
     BallReset(ball);
   }
-  if (ball -> y <= 0) {
-    ball -> y = 0;
-    ball -> ballMoveUp = false;
-    ball -> ballMoveDown = true;
+  if (ball->y <= 0) {
+    ball->y = 0;
+    ball->ballMoveUp = false;
+    ball->ballMoveDown = true;
   }
-  if (ball -> y > WINDOW_HEIGHT - ball -> radius * 2) {
-    ball -> y = WINDOW_HEIGHT - ball -> radius * 2;
-    ball -> ballMoveDown = false;
-    ball -> ballMoveUp = true;
+  if (ball->y > WINDOW_HEIGHT - ball->radius * 2) {
+    ball->y = WINDOW_HEIGHT - ball->radius * 2;
+    ball->ballMoveDown = false;
+    ball->ballMoveUp = true;
   }
 }
 
 void BallMovement(struct Ball *ball, float velocity, Uint32 delta_time) {
 
-    // MOVE BALL
-    if (ball -> ballMoveUp) {
-      ball -> y -= velocity * delta_time;
-    }
-    if (ball -> ballMoveDown) {
-      ball -> y += velocity * delta_time;
-    }
-    if (ball -> ballMoveLeft) {
-      ball -> x -= velocity * delta_time;
-    }
-    if (ball -> ballMoveRight) {
-      ball -> x += velocity * delta_time;
-    }
+  // MOVE BALL
+  if (ball->ballMoveUp) {
+    ball->y -= velocity * delta_time;
+  }
+  if (ball->ballMoveDown) {
+    ball->y += velocity * delta_time;
+  }
+  if (ball->ballMoveLeft) {
+    ball->x -= velocity * delta_time;
+  }
+  if (ball->ballMoveRight) {
+    ball->x += velocity * delta_time;
+  }
 }
 
 void PlayerMovement(struct Player *player, float velocity, Uint32 delta_time) {
-   // MOVE PLAYER
-   if (player -> MoveUp) {
-      player -> y -= velocity * delta_time;
-    }
-    if (player -> MoveDown) {
-      player -> y += velocity * delta_time;
-    }
+  // MOVE PLAYER
+  if (player->MoveUp) {
+    player->y -= velocity * delta_time;
+  }
+  if (player->MoveDown) {
+    player->y += velocity * delta_time;
+  }
 }
 
 void PlayerCollision(struct Player *player) {
-  if (player -> y <= 0) {
-    player -> y = 0;
+  if (player->y <= 0) {
+    player->y = 0;
   }
-  if (player -> y + player -> h > WINDOW_HEIGHT){
-    player -> y = WINDOW_HEIGHT - player -> h;
+  if (player->y + player->h > WINDOW_HEIGHT) {
+    player->y = WINDOW_HEIGHT - player->h;
   }
 }
 
-void ComputerMovement(struct Computer *computer, float computer_velocity, Uint32 delta_time, struct Ball *ball) {
-  if(ball->x >= WINDOW_WIDTH / 2 && ball->x <= computer->x){
-    if(ball -> y + ball -> radius > computer -> y + computer -> h / 2) {
-      computer -> y += computer_velocity * delta_time;
+void ComputerMovement(struct Computer *computer, float computer_velocity,
+                      Uint32 delta_time, struct Ball *ball) {
+  if (ball->x >= WINDOW_WIDTH / 2 && ball->x <= computer->x) {
+    if (ball->y + ball->radius > computer->y + computer->h / 2) {
+      computer->y += computer_velocity * delta_time;
     }
 
-    if(ball -> y + ball -> radius < computer -> y + computer -> h / 2) {
-      computer -> y -= computer_velocity * delta_time;
+    if (ball->y + ball->radius < computer->y + computer->h / 2) {
+      computer->y -= computer_velocity * delta_time;
     }
   }
 }
 
 void ComputerCollision(struct Computer *computer) {
-  if(computer -> y <= 0) {
-    computer -> y = 0;
+  if (computer->y <= 0) {
+    computer->y = 0;
   }
-  if(computer -> y + computer -> h > WINDOW_HEIGHT) {
-    computer -> y = WINDOW_HEIGHT - computer -> h;
+  if (computer->y + computer->h > WINDOW_HEIGHT) {
+    computer->y = WINDOW_HEIGHT - computer->h;
   }
 }
 
 void ComputerAndBallCollision(struct Computer *computer, struct Ball *ball) {
-  if(ball->x + ball->radius * 2 >= computer -> x && ball -> y >= computer -> y && ball->y <= computer->y + computer->h) {
+  if (ball->x + ball->radius * 2 >= computer->x && ball->y >= computer->y &&
+      ball->y <= computer->y + computer->h) {
     ball->x = computer->x - ball->radius * 2;
     ball->ballMoveRight = false;
     ball->ballMoveLeft = true;
@@ -149,15 +149,14 @@ void ComputerAndBallCollision(struct Computer *computer, struct Ball *ball) {
 }
 
 void PlayerAndBallCollision(struct Player *player, struct Ball *ball) {
-    // BALL AND RECTANGLE COLLISIONS
-    if (ball -> x <= player -> x + ball -> radius * 2 && ball -> y >= player -> y && ball -> y <= player -> y + player -> h) {
-      ball -> x = player -> x + 20;
-      ball -> ballMoveLeft = false;
-      ball -> ballMoveRight = true;
-    }
-
+  // BALL AND RECTANGLE COLLISIONS
+  if (ball->x <= player->x + ball->radius * 2 && ball->y >= player->y &&
+      ball->y <= player->y + player->h) {
+    ball->x = player->x + 20;
+    ball->ballMoveLeft = false;
+    ball->ballMoveRight = true;
+  }
 }
-
 
 int main(void) {
   // Initialize SDL's video subsystem
@@ -167,12 +166,12 @@ int main(void) {
   }
 
   TTF_Init();
-  TTF_Font *font = TTF_OpenFont("Monaco.ttf", 32);     
+  TTF_Font *font = TTF_OpenFont("Monaco.ttf", 32);
 
   // Create a window
   SDL_Window *window =
-  SDL_CreateWindow("Pong", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                   WINDOW_WIDTH, WINDOW_HEIGHT, 0);
+      SDL_CreateWindow("Pong", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                       WINDOW_WIDTH, WINDOW_HEIGHT, 0);
   if (!window) {
     fprintf(stderr, "SDL_CreateWindow Error: %s\n", SDL_GetError());
     SDL_Quit();
@@ -225,7 +224,6 @@ int main(void) {
 
   BallReset(&ball);
 
-
   while (running) {
     // 1. Handle input
     Uint32 current_time = SDL_GetTicks();
@@ -253,10 +251,10 @@ int main(void) {
         player.MoveUp = false;
       }
     }
-    char player_score_text[16];                                              
-    sprintf(player_score_text, "%d", player_score); 
-    
-    char computer_score_text[16];                                              
+    char player_score_text[16];
+    sprintf(player_score_text, "%d", player_score);
+
+    char computer_score_text[16];
     sprintf(computer_score_text, "%d", computer_score);
 
     // 2. Update game state
@@ -270,7 +268,7 @@ int main(void) {
     ComputerMovement(&computer, computer_velocity, delta_time, &ball);
     ComputerCollision(&computer);
     ComputerAndBallCollision(&computer, &ball);
-  
+
     // 3. Render
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // black background
     SDL_RenderClear(renderer);
@@ -295,7 +293,7 @@ int main(void) {
     SDL_SetRenderDrawColor(renderer, 125, 200, 16, 75);
     SDL_RenderFillRect(renderer, &ball_rect);
 
-    //COMPUTER
+    // COMPUTER
     SDL_Rect computer_rect;
     computer_rect.x = computer.x;
     computer_rect.y = computer.y;
@@ -307,16 +305,19 @@ int main(void) {
     // SCORE
     SDL_Color white = {255, 255, 255, 255};
 
-    SDL_Surface *p_surface = TTF_RenderText_Solid(font, player_score_text, white);
+    SDL_Surface *p_surface =
+        TTF_RenderText_Solid(font, player_score_text, white);
     SDL_Texture *p_texture = SDL_CreateTextureFromSurface(renderer, p_surface);
     SDL_Rect p_score_rect = {WINDOW_WIDTH / 4, 20, p_surface->w, p_surface->h};
     SDL_RenderCopy(renderer, p_texture, NULL, &p_score_rect);
     SDL_FreeSurface(p_surface);
     SDL_DestroyTexture(p_texture);
 
-    SDL_Surface *c_surface = TTF_RenderText_Solid(font, computer_score_text, white);
+    SDL_Surface *c_surface =
+        TTF_RenderText_Solid(font, computer_score_text, white);
     SDL_Texture *c_texture = SDL_CreateTextureFromSurface(renderer, c_surface);
-    SDL_Rect c_score_rect = {3 * WINDOW_WIDTH / 4, 20, c_surface->w, c_surface->h};
+    SDL_Rect c_score_rect = {3 * WINDOW_WIDTH / 4, 20, c_surface->w,
+                             c_surface->h};
     SDL_RenderCopy(renderer, c_texture, NULL, &c_score_rect);
     SDL_FreeSurface(c_surface);
     SDL_DestroyTexture(c_texture);
