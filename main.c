@@ -96,12 +96,14 @@ void PlayerCollision(struct Player *player) {
 }
 
 void ComputerMovement(struct Computer *computer, float computer_velocity, Uint32 delta_time, struct Ball *ball) {
-  if(ball -> y + ball -> radius > computer -> y + computer -> h / 2) {
-    computer -> y += computer_velocity * delta_time;
-  }
+  if(ball->x >= WINDOW_WIDTH / 2 && ball->x <= computer->x){
+    if(ball -> y + ball -> radius > computer -> y + computer -> h / 2) {
+      computer -> y += computer_velocity * delta_time;
+    }
 
-  if(ball -> y + ball -> radius < computer -> y + computer -> h / 2) {
-    computer -> y -= computer_velocity * delta_time;
+    if(ball -> y + ball -> radius < computer -> y + computer -> h / 2) {
+      computer -> y -= computer_velocity * delta_time;
+    }
   }
 }
 
@@ -163,7 +165,7 @@ int main(void) {
   // Game loop
   int running = 1;
   float velocity = 0.3;
-  float computer_velocity = 0.3;
+  float computer_velocity = 0.1;
   SDL_Event event;
   Uint32 last_time = SDL_GetTicks();
 
